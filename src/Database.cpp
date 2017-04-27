@@ -94,6 +94,25 @@ Database::Database(const std::string& aFilename,
 // Close the SQLite database connection.
 Database::~Database() noexcept // nothrow
 {
+#ifndef NDEBUG
+    {
+        // Check for open sqlite3_stmt handles that will delay closing the database:
+        const int ret = sqlite3_close(mpSQLite);
+        if (ret == SQLITE_OK)
+            return;
+        if (ret == SQLITE_BUSY) {
+            sqlite3_stmt *stmt = nullptr;
+            while (nullptr != (stmt = sqlite3_next_stmt(mpSQLite, stmt))) {
+                fprintf(stderr, "SQLite::Database %p close deferred due to %s sqlite_stmt %p: %s\n",
+                     this,
+                     (sqlite3_stmt_busy(stmt) ? "busy" : "open"),
+                     stmt,
+                     sqlite3_expanded_sql(stmt));
+            }
+        }
+    }
+#endif
+
     const int ret = sqlite3_close_v2(mpSQLite);
 
     // Avoid unreferenced variable warning when build in release mode
