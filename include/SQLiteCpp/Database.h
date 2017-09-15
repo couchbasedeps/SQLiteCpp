@@ -17,8 +17,7 @@
 // Forward declarations to avoid inclusion of <sqlite3.h> in a header
 struct sqlite3;
 struct sqlite3_context;
-struct Mem;
-typedef struct Mem sqlite3_value;
+struct sqlite3_value;
 
 
 namespace SQLite
@@ -315,8 +314,8 @@ public:
                         int         aNbArg,
                         bool        abDeterministic,
                         void*       apApp,
-                        void      (*apFunc)(sqlite3_context *, int, sqlite3_value **),
-                        void      (*apStep)(sqlite3_context *, int, sqlite3_value **),
+                        void      (*apFunc)(sqlite3_context *, int, struct sqlite3_value **),
+                        void      (*apStep)(sqlite3_context *, int, struct sqlite3_value **),
                         void      (*apFinal)(sqlite3_context *),  // NOLINT(readability/casting)
                         void      (*apDestroy)(void *));
 
@@ -343,8 +342,8 @@ public:
                                int                  aNbArg,
                                bool                 abDeterministic,
                                void*                apApp,
-                               void               (*apFunc)(sqlite3_context *, int, sqlite3_value **),
-                               void               (*apStep)(sqlite3_context *, int, sqlite3_value **),
+                               void               (*apFunc)(sqlite3_context *, int, struct sqlite3_value **),
+                               void               (*apStep)(sqlite3_context *, int, struct sqlite3_value **),
                                void               (*apFinal)(sqlite3_context *), // NOLINT(readability/casting)
                                void               (*apDestroy)(void *))
     {
