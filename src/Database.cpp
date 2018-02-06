@@ -74,14 +74,42 @@ Database::Database(const char* apFilename,
 // Deleter functor to use with smart pointers to close the SQLite database connection in an RAII fashion.
 void Database::Deleter::operator()(sqlite3* apSQLite)
 {
-    const int ret = sqlite3_close(apSQLite); // Calling sqlite3_close() with a nullptr argument is a harmless no-op.
+    if (apSQLite) {
+        // This call will return SQLITE_OK even if statements are still open; but the handle will stay
+        // open until the last open statement closes.
+        const int ret = sqlite3_close_v2(apSQLite);
 
-    // Avoid unreferenced variable warning when build in release mode
-    (void) ret;
+        // Avoid unreferenced variable warning when build in release mode
+        (void) ret;
 
-    // Only case of error is SQLITE_BUSY: "database is locked" (some statements are not finalized)
-    // Never throw an exception in a destructor :
-    SQLITECPP_ASSERT(SQLITE_OK == ret, "database is locked");  // See SQLITECPP_ENABLE_ASSERT_HANDLER
+        // Never throw an exception in a destructor :
+        SQLITECPP_ASSERT(SQLITE_OK == ret, "sqlite3_close_v2 failed");  // See SQLITECPP_ENABLE_ASSERT_HANDLER
+    }
+}
+    
+
+// Close the SQLite database connection.
+Database::~Database() noexcept // nothrow
+{
+    if (mSQLitePtr) {
+        // This call will return SQLITE_OK even if statements are still open; but the handle will stay
+        // open until the last open statement closes.
+        const int ret = sqlite3_close_v2(mSQLitePtr.get());
+
+        // Avoid unreferenced variable warning when build in release mode
+        (void) ret;
+
+        // Never throw an exception in a destructor :
+        SQLITECPP_ASSERT(SQLITE_OK == ret, "sqlite3_close_v2 failed");  // See SQLITECPP_ENABLE_ASSERT_HANDLER
+    }
+}
+
+bool Database::closeUnlessStatementsOpen() noexcept {
+    int ret = sqlite3_close(mSQLitePtr.get());
+    if (ret != SQLITE_OK)
+        return false;
+    mSQLitePtr.reset();
+    return true;
 }
 
 /**
@@ -101,6 +129,15 @@ void Database::setBusyTimeout(const int aBusyTimeoutMs)
 {
     const int ret = sqlite3_busy_timeout(getHandle(), aBusyTimeoutMs);
     check(ret);
+}
+
+void Database::withOpenStatements(std::function<void(const char*,bool)> callback) {
+    sqlite3_stmt *stmt = nullptr;
+    while (nullptr != (stmt = sqlite3_next_stmt(mSQLitePtr.get(), stmt))) {
+        auto sql = sqlite3_expanded_sql(stmt);
+        callback(sql, sqlite3_stmt_busy(stmt));
+        sqlite3_free(sql);
+    }
 }
 
 // Shortcut to execute one or multiple SQL statements without results (UPDATE, INSERT, ALTER, COMMIT, CREATE...).
