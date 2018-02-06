@@ -291,6 +291,22 @@ public:
         return mpSQLite;
     }
 
+
+    /**
+     * Closes the database.
+     * On success, returns true; the only thing that may be done with the Database object
+     * thereafter is to delete/destruct it.
+     * This method will return false if any compiled statements are still open. The database
+     * remains open, and you may call withOpenStatements to find out more information.
+     */
+    bool closeUnlessStatementsOpen() noexcept;
+
+    /**
+     * @brief Invokes the callback function once for every open statement.
+     * The callback is passed the SQL string, and a flag that's true if the statement is busy.
+     */
+    void withOpenStatements(std::function<void(const char*,bool)> callback);
+
     /**
      * @brief Create or redefine a SQL function or aggregate in the sqlite database. 
      *
