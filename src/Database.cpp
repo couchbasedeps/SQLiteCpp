@@ -137,7 +137,9 @@ void Database::setBusyTimeout(const int aBusyTimeoutMs) noexcept // nothrow
 void Database::withOpenStatements(std::function<void(const char*,bool)> callback) {
     sqlite3_stmt *stmt = nullptr;
     while (nullptr != (stmt = sqlite3_next_stmt(mpSQLite, stmt))) {
-        callback(sqlite3_expanded_sql(stmt), sqlite3_stmt_busy(stmt));
+        auto sql = sqlite3_expanded_sql(stmt);
+        callback(sql, sqlite3_stmt_busy(stmt));
+        sqlite3_free(sql);
     }
 }
 
