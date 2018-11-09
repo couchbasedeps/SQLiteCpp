@@ -32,24 +32,10 @@ public:
      * @param[in] aErrorMessage The string message describing the SQLite error
      * @param[in] ret           Return value from function call that failed.
      */
-    Exception(const char* aErrorMessage, int ret);
+    Exception(const char* aErrorMessage, int ret = -1, int extended = -1);
 
-    Exception(const std::string& aErrorMessage, int ret) :
-        Exception(aErrorMessage.c_str(), ret)
-    {
-    }
-
-    /**
-     * @brief Encapsulation of the error message from SQLite3, based on std::runtime_error.
-     *
-     * @param[in] aErrorMessage The string message describing the SQLite error
-     */
-    explicit Exception(const char* aErrorMessage) :
-        Exception(aErrorMessage, -1) // 0 would be SQLITE_OK, which doesn't make sense
-    {
-    }
-    explicit Exception(const std::string& aErrorMessage) :
-        Exception(aErrorMessage.c_str(), -1) // 0 would be SQLITE_OK, which doesn't make sense
+    Exception(const std::string& aErrorMessage, int ret = -1, int extended = -1) :
+        Exception(aErrorMessage.c_str(), ret, extended)
     {
     }
 
@@ -82,6 +68,9 @@ public:
 
     /// Return a string, solely based on the error code
     const char* getErrorStr() const noexcept;
+
+    /// Callback that can be set to log about an Exception before it's thrown
+    static void (*logger)(const Exception&);
 
 private:
     int mErrcode;         ///< Error code value

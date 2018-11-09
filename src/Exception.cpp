@@ -16,24 +16,28 @@
 namespace SQLite
 {
 
-Exception::Exception(const char* aErrorMessage, int ret) :
+void (*Exception::logger)(const Exception&);
+
+Exception::Exception(const char* aErrorMessage, int ret, int extended) :
     std::runtime_error(aErrorMessage),
     mErrcode(ret),
-    mExtendedErrcode(-1)
+    mExtendedErrcode(extended)
 {
+    if (logger)
+        logger(*this);
 }
 
 Exception::Exception(sqlite3* apSQLite) :
-    std::runtime_error(sqlite3_errmsg(apSQLite)),
-    mErrcode(sqlite3_errcode(apSQLite)),
-    mExtendedErrcode(sqlite3_extended_errcode(apSQLite))
+    Exception(sqlite3_errmsg(apSQLite),
+              sqlite3_errcode(apSQLite),
+              sqlite3_extended_errcode(apSQLite))
 {
 }
 
 Exception::Exception(sqlite3* apSQLite, int ret) :
-    std::runtime_error(sqlite3_errmsg(apSQLite)),
-    mErrcode(ret),
-    mExtendedErrcode(sqlite3_extended_errcode(apSQLite))
+    Exception(sqlite3_errmsg(apSQLite),
+              ret,
+              sqlite3_extended_errcode(apSQLite))
 {
 }
 
