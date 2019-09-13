@@ -147,6 +147,13 @@ void Statement::bind(const int aIndex)
     check(ret);
 }
 
+void Statement::bindPointer(const int aIndex, void *pointer, const char *pointerType,
+                            void(*destructor)(void*)) {
+    const int ret = sqlite3_bind_pointer(mStmtPtr, aIndex, pointer, pointerType, destructor);
+    check(ret);
+}
+
+
 
 // Execute a step of the query to fetch one row of results
 bool Statement::executeStep()
