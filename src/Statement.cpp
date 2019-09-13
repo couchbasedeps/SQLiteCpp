@@ -21,9 +21,9 @@ namespace SQLite
 {
 
 // Compile and register the SQL query for the provided SQLite Database Connection
-Statement::Statement(Database &aDatabase, const char* apQuery) :
+Statement::Statement(Database &aDatabase, const char* apQuery, bool persistent) :
     mQuery(apQuery),
-    mStmtPtr(aDatabase.mpSQLite, mQuery), // prepare the SQL query, and ref count (needs Database friendship)
+    mStmtPtr(aDatabase.mpSQLite, mQuery, persistent), // prepare the SQL query, and ref count (needs Database friendship)
     mColumnCount(0),
     mbOk(false),
     mbDone(false)
@@ -32,9 +32,9 @@ Statement::Statement(Database &aDatabase, const char* apQuery) :
 }
 
 // Compile and register the SQL query for the provided SQLite Database Connection
-Statement::Statement(Database &aDatabase, const std::string& aQuery) :
+Statement::Statement(Database &aDatabase, const std::string& aQuery, bool persistent) :
     mQuery(aQuery),
-    mStmtPtr(aDatabase.mpSQLite, mQuery), // prepare the SQL query, and ref count (needs Database friendship)
+    mStmtPtr(aDatabase.mpSQLite, mQuery, persistent), // prepare the SQL query, and ref count (needs Database friendship)
     mColumnCount(0),
     mbOk(false),
     mbDone(false)
@@ -413,13 +413,16 @@ const char* Statement::getErrorMsg() const noexcept // nothrow
  *
  * @param[in] apSQLite  The sqlite3 database connexion
  * @param[in] aQuery    The SQL query string to prepare
+ * @param[in] persistent True if the statement will be used many times (performance hint)
  */
-Statement::Ptr::Ptr(sqlite3* apSQLite, std::string& aQuery) :
+Statement::Ptr::Ptr(sqlite3* apSQLite, std::string& aQuery, bool persistent) :
     mpSQLite(apSQLite),
     mpStmt(NULL),
     mpRefCount(NULL)
 {
-    const int ret = sqlite3_prepare_v2(apSQLite, aQuery.c_str(), static_cast<int>(aQuery.size()), &mpStmt, NULL);
+    unsigned flags = (persistent ? SQLITE_PREPARE_PERSISTENT : 0);
+    const int ret = sqlite3_prepare_v3(apSQLite, aQuery.c_str(), static_cast<int>(aQuery.size()),
+                                       flags, &mpStmt, NULL);
     if (SQLITE_OK != ret)
     {
         throw SQLite::Exception(apSQLite, ret);
