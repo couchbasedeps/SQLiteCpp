@@ -20,14 +20,22 @@
 namespace SQLite
 {
 
-Statement::Statement(Database &aDatabase, const char* apQuery) :
+// Compile and register the SQL query for the provided SQLite Database Connection
+Statement::Statement(Database &aDatabase, const char* apQuery, bool persistent) :
     mQuery(apQuery),
-    mStmtPtr(aDatabase.getHandle(), mQuery), // prepare the SQL query, and ref count (needs Database friendship)
+    mStmtPtr(aDatabase.mSQLitePtr.get(), mQuery, persistent), // prepare the SQL query, and ref count (needs Database friendship)
     mColumnCount(0),
     mbHasRow(false),
     mbDone(false)
 {
     mColumnCount = sqlite3_column_count(mStmtPtr);
+}
+
+// Compile and register the SQL query for the provided SQLite Database Connection
+Statement::Statement(Database &aDatabase, const std::string& aQuery, bool persistent) :
+    Statement(aDatabase, aQuery.c_str(), persistent)
+{
+
 }
 
 Statement::Statement(Statement&& aStatement) noexcept :
@@ -371,13 +379,16 @@ std::string Statement::getExpandedSQL() {
  *
  * @param[in] apSQLite  The sqlite3 database connexion
  * @param[in] aQuery    The SQL query string to prepare
+ * @param[in] persistent True if the statement will be used many times (performance hint)
  */
-Statement::Ptr::Ptr(sqlite3* apSQLite, std::string& aQuery) :
+Statement::Ptr::Ptr(sqlite3* apSQLite, std::string& aQuery, bool persistent) :
     mpSQLite(apSQLite),
     mpStmt(NULL),
     mpRefCount(NULL)
 {
-    const int ret = sqlite3_prepare_v2(apSQLite, aQuery.c_str(), static_cast<int>(aQuery.size()), &mpStmt, NULL);
+    unsigned flags = (persistent ? SQLITE_PREPARE_PERSISTENT : 0);
+    const int ret = sqlite3_prepare_v3(apSQLite, aQuery.c_str(), static_cast<int>(aQuery.size()),
+                                       flags, &mpStmt, NULL);
     if (SQLITE_OK != ret)
     {
         throw SQLite::Exception(apSQLite, ret);

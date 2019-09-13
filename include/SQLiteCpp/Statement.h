@@ -62,7 +62,7 @@ public:
      *
      * Exception is thrown in case of error, then the Statement object is NOT constructed.
      */
-    Statement(Database& aDatabase, const char* apQuery);
+    Statement(Database& aDatabase, const char* apQuery, bool persistent = false);
 
     /**
      * @brief Compile and register the SQL query for the provided SQLite Database Connection
@@ -72,9 +72,7 @@ public:
      *
      * Exception is thrown in case of error, then the Statement object is NOT constructed.
      */
-    Statement(Database &aDatabase, const std::string& aQuery) :
-        Statement(aDatabase, aQuery.c_str())
-    {}
+    Statement(Database& aDatabase, const std::string& aQuery, bool persistent = false);
 
     /**
      * @brief Move an SQLite statement.
@@ -729,7 +727,7 @@ private:
     {
     public:
         // Prepare the statement and initialize its reference counter
-        Ptr(sqlite3* apSQLite, std::string& aQuery);
+        Ptr(sqlite3* apSQLite, std::string& aQuery, bool persistent);
         // Copy constructor increments the ref counter
         Ptr(const Ptr& aPtr);
 
