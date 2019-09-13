@@ -182,6 +182,8 @@ public:
      */
     void bind(const int aIndex);
 
+    void bindPointer(const int aIndex, void *pointer, const char *pointerType, void(*destructor)(void*) = nullptr);
+
     /**
      * @brief Bind an int value to a named parameter "?NNN", ":VVV", "@VVV" or "$VVV" in the SQL prepared statement (aIndex >= 1)
      */

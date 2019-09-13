@@ -158,6 +158,13 @@ void Statement::bind(const int aIndex)
     check(ret);
 }
 
+void Statement::bindPointer(const int aIndex, void *pointer, const char *pointerType,
+                            void(*destructor)(void*)) {
+    const int ret = sqlite3_bind_pointer(mStmtPtr, aIndex, pointer, pointerType, destructor);
+    check(ret);
+}
+
+
 
 // Bind an int value to a parameter "?NNN", ":VVV", "@VVV" or "$VVV" in the SQL prepared statement
 void Statement::bind(const char* apName, const int aValue)
