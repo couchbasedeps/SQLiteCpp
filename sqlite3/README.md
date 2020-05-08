@@ -1,12 +1,11 @@
 sqlite3
 -------
 
-"sqlite3.c" and "sqlite3.h" files from sqlite-amalgamation-3250200.zip (SQLite 3.25.2 2018-09-25)
+### This is a one-off build of SQLite, not a release!!!
 
-Those files are provided for easy setup and compatibility under Windows/Linux/MacOS.
-They are used by default by the CMake build.
+"sqlite3.c" and "sqlite3.h" files from sqlite-snapshot-202005081822. Version identifier is "3.32.0".
 
-Use -DSQLITECPP_INTERNAL_SQLITE=OFF to link against the Linux "libsqlite3-dev" package instead.
+This build adds some extra-careful sanity checks around index updates, to hopefully detect index corruption earlier.
 
 ### License:
 
