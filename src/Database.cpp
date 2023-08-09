@@ -244,8 +244,13 @@ void Database::loadExtension(const char* apExtensionName, const char *apEntryPoi
 #endif
     check(ret);
 
-    ret = sqlite3_load_extension(mpSQLite, apExtensionName, apEntryPointName, 0);
-    check(ret);
+    char *message = nullptr;
+    ret = sqlite3_load_extension(mpSQLite, apExtensionName, apEntryPointName, &message);
+    if (ret != SQLITE_OK) {
+        auto messageStr = std::string("Error loading SQLite extension: ") + message;
+        free(message);
+        throw SQLite::Exception(messageStr);
+    }
 #endif
 }
 
