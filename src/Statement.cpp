@@ -14,8 +14,8 @@
 #include <SQLiteCpp/Column.h>
 #include <SQLiteCpp/Assertion.h>
 #include <SQLiteCpp/Exception.h>
-
 #include <sqlite3.h>
+#include "carray.h"
 
 namespace SQLite
 {
@@ -158,13 +158,41 @@ void Statement::bind(const int aIndex)
     check(ret);
 }
 
-void Statement::bindPointer(const int aIndex, void *pointer, const char *pointerType,
-                            void(*destructor)(void*)) {
-    const int ret = sqlite3_bind_pointer(mStmtPtr, aIndex, pointer, pointerType, destructor);
+void Statement::bindPointer(const int aIndex, void *pointer, const char *pointerType, destructor dtor) 
+{
+    const int ret = sqlite3_bind_pointer(mStmtPtr, aIndex, pointer, pointerType, dtor);
     check(ret);
 }
 
+void Statement::bindArray(const int aIndex, const int32_t array[], size_t size, destructor dtor) 
+{
+    check(sqlite3_carray_bind(mStmtPtr, aIndex, (void*)array, int(size), CARRAY_INT32, dtor));
+}
 
+void Statement::bindArray(const int aIndex, const int64_t array[], size_t size, destructor dtor) 
+{
+    check(sqlite3_carray_bind(mStmtPtr, aIndex, (void*)array, int(size), CARRAY_INT64, dtor));
+}
+
+void Statement::bindArray(const int aIndex, const double array[], size_t size, destructor dtor) 
+{
+    check(sqlite3_carray_bind(mStmtPtr, aIndex, (void*)array, int(size), CARRAY_DOUBLE, dtor));
+}
+
+void Statement::bindArray(const int aIndex, const char* array[], size_t size, destructor dtor) 
+{
+    check(sqlite3_carray_bind(mStmtPtr, aIndex, (void*)array, int(size), CARRAY_TEXT, dtor));
+}
+
+void Statement::bindArray(const int aIndex, const blob array[], size_t size, destructor dtor)
+{
+    check(sqlite3_carray_bind(mStmtPtr, aIndex, (void*)array, int(size), CARRAY_BLOB, dtor));
+}
+
+void Statement::bindArray(const int aIndex, const text array[], size_t size, destructor dtor)
+{
+    check(sqlite3_carray_bind(mStmtPtr, aIndex, (void*)array, int(size), CARRAY_TEXT_LEN, dtor));
+}
 
 // Bind an int value to a parameter "?NNN", ":VVV", "@VVV" or "$VVV" in the SQL prepared statement
 void Statement::bind(const char* apName, const int aValue)
