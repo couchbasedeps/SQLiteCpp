@@ -171,34 +171,48 @@ void Statement::bindPointer(const int aIndex, void *pointer, const char *pointer
     check(ret);
 }
 
-void Statement::bindArray(const int aIndex, const int32_t array[], size_t size, destructor dtor) 
+
+
+template <size_t S> struct carrayIntFlags;
+template <> struct carrayIntFlags<4> { static constexpr int flags = CARRAY_INT32; };
+template <> struct carrayIntFlags<8> { static constexpr int flags = CARRAY_INT64; };
+
+void Statement::bindArray(const int i, const int array[], size_t size, destructor dtor)
 {
-    check(sqlite3_carray_bind(mStmtPtr, aIndex, (void*)array, int(size), CARRAY_INT32, dtor));
+    check(sqlite3_carray_bind(mStmtPtr, i, (void*)array, int(size),
+                              carrayIntFlags<sizeof(*array)>::flags, dtor));
 }
 
-void Statement::bindArray(const int aIndex, const int64_t array[], size_t size, destructor dtor) 
+void Statement::bindArray(const int i, const long array[], size_t size, destructor dtor)
 {
-    check(sqlite3_carray_bind(mStmtPtr, aIndex, (void*)array, int(size), CARRAY_INT64, dtor));
+    check(sqlite3_carray_bind(mStmtPtr, i, (void*)array, int(size),
+                              carrayIntFlags<sizeof(*array)>::flags, dtor));
 }
 
-void Statement::bindArray(const int aIndex, const double array[], size_t size, destructor dtor) 
+void Statement::bindArray(const int i, const long long array[], size_t size, destructor dtor)
 {
-    check(sqlite3_carray_bind(mStmtPtr, aIndex, (void*)array, int(size), CARRAY_DOUBLE, dtor));
+    check(sqlite3_carray_bind(mStmtPtr, i, (void*)array, int(size),
+                              carrayIntFlags<sizeof(*array)>::flags, dtor));
 }
 
-void Statement::bindArray(const int aIndex, const char* array[], size_t size, destructor dtor) 
+void Statement::bindArray(const int i, const double array[], size_t size, destructor dtor)
 {
-    check(sqlite3_carray_bind(mStmtPtr, aIndex, (void*)array, int(size), CARRAY_TEXT, dtor));
+    check(sqlite3_carray_bind(mStmtPtr, i, (void*)array, int(size), CARRAY_DOUBLE, dtor));
 }
 
-void Statement::bindArray(const int aIndex, const blob array[], size_t size, destructor dtor)
+void Statement::bindArray(const int i, const char* array[], size_t size, destructor dtor)
 {
-    check(sqlite3_carray_bind(mStmtPtr, aIndex, (void*)array, int(size), CARRAY_BLOB, dtor));
+    check(sqlite3_carray_bind(mStmtPtr, i, (void*)array, int(size), CARRAY_TEXT, dtor));
 }
 
-void Statement::bindArray(const int aIndex, const text array[], size_t size, destructor dtor)
+void Statement::bindArray(const int i, const blob array[], size_t size, destructor dtor)
 {
-    check(sqlite3_carray_bind(mStmtPtr, aIndex, (void*)array, int(size), CARRAY_TEXT_LEN, dtor));
+    check(sqlite3_carray_bind(mStmtPtr, i, (void*)array, int(size), CARRAY_BLOB, dtor));
+}
+
+void Statement::bindArray(const int i, const text array[], size_t size, destructor dtor)
+{
+    check(sqlite3_carray_bind(mStmtPtr, i, (void*)array, int(size), CARRAY_TEXT_LEN, dtor));
 }
 
 // Bind an int value to a parameter "?NNN", ":VVV", "@VVV" or "$VVV" in the SQL prepared statement
