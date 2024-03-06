@@ -14,7 +14,12 @@
 #include <SQLiteCpp/Assertion.h>
 #include <SQLiteCpp/Exception.h>
 
+#ifdef SQLITECPP_BUILDING_EXTENSION
+#include <sqlite3ext.h>
+SQLITE_EXTENSION_INIT3
+#else
 #include <sqlite3.h>
+#endif
 
 #ifndef SQLITE_DETERMINISTIC
 #define SQLITE_DETERMINISTIC 0x800
@@ -91,10 +96,17 @@ Database::Database(const std::string& aFilename,
     }
 }
 
+Database::Database(sqlite3* db) :
+    mpSQLite(db),
+    mOwnsConnection(false)
+{
+}
+
+
 // Close the SQLite database connection.
 Database::~Database() noexcept // nothrow
 {
-    if (mpSQLite) {
+    if (mpSQLite && mOwnsConnection) {
         // This call will return SQLITE_OK even if statements are still open; but the handle will stay
         // open until the last open statement closes.
         const int ret = sqlite3_close_v2(mpSQLite);
@@ -107,13 +119,15 @@ Database::~Database() noexcept // nothrow
     }
 }
 
-    bool Database::closeUnlessStatementsOpen() noexcept {
+bool Database::closeUnlessStatementsOpen() noexcept {
+    if (mOwnsConnection) {
         int ret = sqlite3_close(mpSQLite);
         if (ret != SQLITE_OK)
             return false;
-        mpSQLite = nullptr;
-        return true;
     }
+    mpSQLite = nullptr;
+    return true;
+}
 
 /**
  * @brief Set a busy handler that sleeps for a specified amount of time when a table is locked.

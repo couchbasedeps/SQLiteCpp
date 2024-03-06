@@ -14,7 +14,14 @@
 #include <SQLiteCpp/Column.h>
 #include <SQLiteCpp/Assertion.h>
 #include <SQLiteCpp/Exception.h>
+
+#ifdef SQLITECPP_BUILDING_EXTENSION
+#include <sqlite3ext.h>
+SQLITE_EXTENSION_INIT3
+#else
 #include <sqlite3.h>
+#endif
+
 #include "carray.h"
 
 namespace SQLite

@@ -67,10 +67,16 @@
 ** as the number of elements in the array.  The virtual table steps through
 ** the array, element by element.
 */
+
+#ifdef SQLITECPP_BUILDING_EXTENSION
+#include <sqlite3ext.h>
+SQLITE_EXTENSION_INIT1
+#else
+#include <sqlite3.h>
+#endif
+
 #include "carray.h"
 #include "carray_internal.h"
-#include "sqlite3ext.h"
-SQLITE_EXTENSION_INIT1
 
 #ifndef SQLITE_API
 # ifdef _WIN32
@@ -412,7 +418,9 @@ SQLITE_API int sqlite3_carray_init(
   const sqlite3_api_routines *pApi
 ){
   int rc = SQLITE_OK;
+#ifdef SQLITECPP_BUILDING_EXTENSION
   SQLITE_EXTENSION_INIT2(pApi);
+#endif
   rc = sqlite3_create_module(db, "carray", &carrayModule, 0);
   return rc;
 }

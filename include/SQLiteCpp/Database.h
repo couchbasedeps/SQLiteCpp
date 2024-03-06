@@ -115,6 +115,14 @@ public:
              const std::string& aVfs            = "");
 
     /**
+     * @brief Construct a Database instance with an already-open database connection.
+     *
+     * The Database instance will _not_ close the database connection in its destructor.
+     *
+     */
+    explicit Database(sqlite3* db);
+
+    /**
      * @brief Close the SQLite database connection.
      *
      * All SQLite statements must have been finalized before,
@@ -405,6 +413,7 @@ private:
 private:
     sqlite3*    mpSQLite;   ///< Pointer to SQLite Database Connection Handle
     std::string mFilename;  ///< UTF-8 filename used to open the database
+    bool        mOwnsConnection = true; ///< If true, I am responsible for closing the connection
 };
 
 
