@@ -10,7 +10,12 @@
  */
 #include <SQLiteCpp/Exception.h>
 
+#ifdef SQLITECPP_BUILDING_EXTENSION
+#include <sqlite3ext.h>
+SQLITE_EXTENSION_INIT3
+#else
 #include <sqlite3.h>
+#endif
 
 
 namespace SQLite

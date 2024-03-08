@@ -103,6 +103,9 @@ public:
     // instead of being copied.
     // => if you know what you are doing, use bindNoCopy() instead of bind()
 
+    using destructor = void(*)(void*);
+    inline static const destructor transient = destructor(-1);
+
     /**
      * @brief Bind an int value to a parameter "?", "?NNN", ":VVV", "@VVV" or "$VVV" in the SQL prepared statement (aIndex >= 1)
      */
@@ -182,7 +185,33 @@ public:
      */
     void bind(const int aIndex);
 
-    void bindPointer(const int aIndex, void *pointer, const char *pointerType, void(*destructor)(void*) = nullptr);
+    /**
+     * @brief Bind a pointer to a parameter.
+     * The pointer can be dereferenced in a C function by calling `sqlite3_value_pointer`.
+     */
+    void bindPointer(const int aIndex, void *pointer, const char *pointerType, destructor = nullptr);
+
+    struct blob {
+        const void* base;
+        size_t len;
+    };
+    struct text {
+        const char* base;
+        size_t len;
+    };
+
+    /**
+     * @brief Bind an array to a parameter.
+     * In the SQL query, this parameter must be the single argument to the `carray()` function.
+     * Requires the SQLite "carray" extension be loaded.
+     */
+    void bindArray(const int aIndex, const int       array[], size_t size, destructor d = nullptr);
+    void bindArray(const int aIndex, const long      array[], size_t size, destructor d = nullptr);
+    void bindArray(const int aIndex, const long long array[], size_t size, destructor d = nullptr);
+    void bindArray(const int aIndex, const double    array[], size_t size, destructor = nullptr);
+    void bindArray(const int aIndex, const char*     array[], size_t size, destructor = nullptr);
+    void bindArray(const int aIndex, const blob      array[], size_t size, destructor = nullptr);
+    void bindArray(const int aIndex, const text      array[], size_t size, destructor = nullptr);
 
     /**
      * @brief Bind an int value to a named parameter "?NNN", ":VVV", "@VVV" or "$VVV" in the SQL prepared statement (aIndex >= 1)
