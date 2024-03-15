@@ -62,7 +62,7 @@ SQLITE_API int sqlite3_carray_bind(
 ){
   carray_bind *pNew;
   int i;
-  pNew = sqlite3_malloc64(sizeof(*pNew));
+  pNew = static_cast<carray_bind *>(sqlite3_malloc64(sizeof(*pNew)));
   if( pNew==0 ){
     if( xDestroy!=SQLITE_STATIC && xDestroy!=SQLITE_TRANSIENT ){
       xDestroy(aData);
