@@ -85,6 +85,7 @@ SQLITE_EXTENSION_INIT1
 #  define SQLITE_API
 # endif
 #endif
+using sqlite3_index_constraint = sqlite3_index_info::sqlite3_index_constraint;
 
 /*
 ** Names of allowed datatypes
@@ -137,7 +138,7 @@ static int carrayConnect(
   rc = sqlite3_declare_vtab(db,
      "CREATE TABLE x(value,pointer hidden,count hidden,ctype hidden)");
   if( rc==SQLITE_OK ){
-    pNew = *ppVtab = sqlite3_malloc( sizeof(*pNew) );
+    pNew = *ppVtab = static_cast<sqlite3_vtab *>(sqlite3_malloc( sizeof(*pNew) ));
     if( pNew==0 ) return SQLITE_NOMEM;
     memset(pNew, 0, sizeof(*pNew));
   }
@@ -157,7 +158,7 @@ static int carrayDisconnect(sqlite3_vtab *pVtab){
 */
 static int carrayOpen(sqlite3_vtab *p, sqlite3_vtab_cursor **ppCursor){
   carray_cursor *pCur;
-  pCur = sqlite3_malloc( sizeof(*pCur) );
+  pCur = static_cast<carray_cursor *>(sqlite3_malloc( sizeof(*pCur) ));
   if( pCur==0 ) return SQLITE_NOMEM;
   memset(pCur, 0, sizeof(*pCur));
   *ppCursor = &pCur->base;
@@ -230,7 +231,7 @@ static int carrayColumn(
         }
         case CARRAY_TEXT_LEN: {
           const sqlite3_iovec *p = (sqlite3_iovec*)pCur->pPtr;
-          sqlite3_result_text(ctx, p[pCur->iRowid-1].base,
+          sqlite3_result_text(ctx, reinterpret_cast<const char *>(p[pCur->iRowid-1].base),
                                (int)p[pCur->iRowid-1].len, SQLITE_TRANSIENT);
           return SQLITE_OK;
         }
@@ -277,7 +278,7 @@ static int carrayFilter(
   pCur->iCnt = 0;
   switch( idxNum ){
     case 1: {
-      carray_bind *pBind = sqlite3_value_pointer(argv[0], "carray-bind");
+      carray_bind *pBind = static_cast<carray_bind *>(sqlite3_value_pointer(argv[0], "carray-bind"));
       if( pBind==0 ) break;
       pCur->pPtr = pBind->aData;
       pCur->iCnt = pBind->nData;
@@ -340,8 +341,8 @@ static int carrayBestIndex(
   int cntIdx = -1;       /* Index of the count= constraint, or -1 if none */
   int ctypeIdx = -1;     /* Index of the ctype= constraint, or -1 if none */
 
-  const struct sqlite3_index_constraint *pConstraint;
-  pConstraint = pIdxInfo->aConstraint;
+  const sqlite3_index_constraint *pConstraint;
+  pConstraint = reinterpret_cast<const sqlite3_index_constraint *>(pIdxInfo->aConstraint);
   for(i=0; i<pIdxInfo->nConstraint; i++, pConstraint++){
     if( pConstraint->usable==0 ) continue;
     if( pConstraint->op!=SQLITE_INDEX_CONSTRAINT_EQ ) continue;
