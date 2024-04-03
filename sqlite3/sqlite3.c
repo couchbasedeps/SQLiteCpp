@@ -42427,10 +42427,10 @@ SQLITE_API int sqlite3_fullsync_count = 0;
 
 /*
 ** Define HAVE_FULLFSYNC to 0 or 1 depending on whether or not
-** the F_FULLFSYNC macro is defined.  F_FULLFSYNC is currently
+** the F_BARRIERFSYNC macro is defined.  F_BARRIERFSYNC is currently
 ** only available on Mac OS X.  But that could change.
 */
-#ifdef F_FULLFSYNC
+#ifdef F_BARRIERFSYNC
 # define HAVE_FULLFSYNC 1
 #else
 # define HAVE_FULLFSYNC 0
@@ -42500,7 +42500,7 @@ static int full_fsync(int fd, int fullSync, int dataOnly){
   }
 #elif HAVE_FULLFSYNC
   if( fullSync ){
-    rc = osFcntl(fd, F_FULLFSYNC, 0);
+    rc = osFcntl(fd, F_BARRIERFSYNC, 0);
   }else{
     rc = 1;
   }
@@ -61656,7 +61656,7 @@ SQLITE_PRIVATE void sqlite3PagerShrink(Pager *pPager){
 **
 ** Do not confuse synchronous=FULL with SQLITE_SYNC_FULL.  The
 ** SQLITE_SYNC_FULL macro means to use the MacOSX-style full-fsync
-** using fcntl(F_FULLFSYNC).  SQLITE_SYNC_NORMAL means to do an
+** using fcntl(F_BARRIERFSYNC).  SQLITE_SYNC_NORMAL means to do an
 ** ordinary fsync() call.  There is no difference between SQLITE_SYNC_FULL
 ** and SQLITE_SYNC_NORMAL on platforms other than MacOSX.  But the
 ** synchronous=FULL versus synchronous=NORMAL setting determines when
